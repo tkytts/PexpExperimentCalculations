@@ -11,7 +11,7 @@ namespace ExperimentCalculations.Services
             worksheet.Cells[1, 1].Value = "Total de respostas";
             worksheet.Cells[1, 1].Style.Font.Bold = true;
 
-            var totalResponses = sessions.Sum(s => s.Results.Where(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia").Count());
+            var totalResponses = sessions.Sum(s => s.Results.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia"));
             worksheet.Cells[2, 1].Value = totalResponses;
 
             return totalResponses;

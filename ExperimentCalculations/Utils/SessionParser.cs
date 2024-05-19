@@ -23,7 +23,7 @@ internal static class SessionParser
                 var results = GetResult(sessionStream, sessionFile.Name, phaseName);
 
                 if (sessions.Count != 0 && !sessions.Any(s => s.Subject == subject))
-                    throw new Exception($"O arquivo de timestamp no caminho {sessionFile.FullName} tem um participante diferente de {sessions.First().Subject}. Nenhum cálculo foi feito, revise os arquivos e tente novamente.");
+                    throw new Exception($"O arquivo de timestamp {sessionFile.FullName} tem um participante diferente de {sessions.First().Subject}. Nenhum cálculo foi feito, revise os arquivos e tente novamente.");
 
                 sessions.Add(new Session
                 {

@@ -9,11 +9,11 @@ try
     var dataProcessingService = new DataProcessingService();
     dataProcessingService.Process();
 
-    Console.WriteLine("Processamento finalizado com sucesso. Aperte qualquer tecla para sair.");
-    Console.ReadLine();
+    Console.WriteLine("Processamento finalizado com sucesso. Aperte enter para sair.");
+    Console.Read();
 }
 catch (Exception exception)
 {
     Console.WriteLine(exception.Message);
-    Console.ReadLine();
+    Console.Read();
 }

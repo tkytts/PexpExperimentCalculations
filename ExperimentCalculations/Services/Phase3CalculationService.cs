@@ -3,6 +3,7 @@ using ExperimentCalculations.Interfaces;
 using ExperimentCalculations.Models;
 using ExperimentCalculations.Utils;
 using OfficeOpenXml;
+using System.Runtime.InteropServices.Marshalling;
 
 namespace ExperimentCalculations.Services
 {
@@ -28,36 +29,29 @@ namespace ExperimentCalculations.Services
                 var splitAResults = SplitAResults(session.Results);
                 var splitBResults = SplitBResults(session.Results);
                 var firstRow = 2;
-                foreach (var aResults in splitAResults)
-                {
-                    // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
-                    var resultIndex = splitAResults.IndexOf(aResults);
-                    var cellRow = firstRow + resultIndex;
 
-                    XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+                var lastRow = FillCoefficient1(splitAResults, splitBResults, firstRow, sessionColumn, worksheet);
 
-                    var coefficient1 = CalculateCoefficient1(aResults, splitBResults[resultIndex]);
+                lastRow += 2;
 
-                    XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, coefficient1.ToString(), false);
-                }
+                XlsxUtils.FillCell(worksheet, lastRow, sessionColumn, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante A", true);
+                XlsxUtils.FillCell(worksheet, lastRow++, sessionColumn + 1, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante B", true);
+
+                lastRow = FillCoefficient1Totals(splitAResults, splitBResults, lastRow, sessionColumn, worksheet);
 
                 var aLineSplitResults = SplitALineResults(session.Results);
                 var bLineSplitResults = SplitBLineResults(session.Results);
 
                 XlsxUtils.FillCell(worksheet, 1, ++currentColumn, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Coeficiente B'", true);
 
-                foreach (var aLineResults in aLineSplitResults)
-                {
-                    // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
-                    var resultIndex = aLineSplitResults.IndexOf(aLineResults);
-                    var cellRow = firstRow + resultIndex;
+                FillCoefficient2(aLineSplitResults, bLineSplitResults, firstRow, currentColumn, worksheet);
 
-                    XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+                lastRow += aLineSplitResults.Count + 1;
 
-                    var coefficient2 = CalculateCoefficient2(aLineResults, splitBResults[resultIndex]);
+                XlsxUtils.FillCell(worksheet, lastRow, sessionColumn, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante A'", true);
+                XlsxUtils.FillCell(worksheet, lastRow++, sessionColumn + 1, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante B'", true);
 
-                    XlsxUtils.FillCell(worksheet, cellRow, currentColumn, coefficient2.ToString(), false);
-                }
+                FillCoefficient2Totals(aLineSplitResults, bLineSplitResults, lastRow, sessionColumn, worksheet);
 
                 previousTotal = currentTotal;
             }
@@ -136,11 +130,99 @@ namespace ExperimentCalculations.Services
             return splitResults;
         }
 
+        private static int FillCoefficient1(List<List<Result>> splitAResults, List<List<Result>> splitBResults, int firstRow, int sessionColumn, ExcelWorksheet worksheet)
+        {
+            var lastRow = firstRow;
+
+            foreach (var aResults in splitAResults)
+            {
+                // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
+                var resultIndex = splitAResults.IndexOf(aResults);
+                var cellRow = firstRow + resultIndex;
+
+                XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+
+                var coefficient1 = CalculateCoefficient1(aResults, splitBResults[resultIndex]);
+
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, coefficient1.ToString(), false);
+
+                lastRow = cellRow;
+            }
+
+            return lastRow;
+        }
+
         private static double CalculateCoefficient1(List<Result> aResults, List<Result> bResults)
         {
             var totalAResponses = aResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
             var totalBResponses = bResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
             return Math.Round(totalBResponses / (totalAResponses + (double)totalBResponses), 2);
+        }
+
+        private static int FillCoefficient1Totals(List<List<Result>> splitAResults, List<List<Result>> splitBResults, int firstRow, int sessionColumn, ExcelWorksheet worksheet)
+        {
+            var lastRow = firstRow;
+
+            foreach (var aResults in splitAResults)
+            {
+                // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
+                var resultIndex = splitAResults.IndexOf(aResults);
+                var cellRow = lastRow + resultIndex;
+
+                XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+
+                var aTotal = aResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
+                var bTotal = splitBResults[resultIndex].Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
+
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, aTotal.ToString(), false);
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn + 1, bTotal.ToString(), false);
+            }
+
+            return lastRow;
+        }
+
+        private static int FillCoefficient2(List<List<Result>> aLineSplitResults, List<List<Result>> bLineSplitResults, int firstRow, int currentColumn, ExcelWorksheet worksheet)
+        {
+            var lastRow = firstRow;
+
+            foreach (var aLineResults in aLineSplitResults)
+            {
+                // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
+                var resultIndex = aLineSplitResults.IndexOf(aLineResults);
+                var cellRow = firstRow + resultIndex;
+
+                XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+
+                var coefficient2 = CalculateCoefficient2(aLineResults, bLineSplitResults[resultIndex]);
+
+                XlsxUtils.FillCell(worksheet, cellRow, currentColumn, coefficient2.ToString(), false);
+
+                lastRow = cellRow;
+            }
+
+            return lastRow;
+        }
+
+        private static int FillCoefficient2Totals(List<List<Result>> aLineSplitResults, List<List<Result>> bLineSplitResults, int firstRow, int sessionColumn, ExcelWorksheet worksheet)
+        {
+            var lastRow = firstRow;
+
+            foreach (var aLineResults in aLineSplitResults)
+            {
+                // A and B are supposed to have the same indexes, if they don't, the timestamp is wrong.
+                var resultIndex = aLineSplitResults.IndexOf(aLineResults);
+                var cellRow = lastRow + resultIndex;
+
+                XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
+
+                var aTotal = aLineResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
+                var bTotal = bLineSplitResults[resultIndex].Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
+
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, aTotal.ToString(), false);
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn + 1, bTotal.ToString(), false);
+            }
+
+            return lastRow;
         }
 
         private static double CalculateCoefficient2(List<Result> splitAResults, List<Result> splitBResults)
