@@ -74,17 +74,17 @@ namespace ExperimentCalculations.Services
 
                 XlsxUtils.FillCell(worksheet, 4, sessionColumn + 2, $"Média da variação entre todos os tempos {sessionName}", true);
                 XlsxUtils.FillCell(worksheet, 5, sessionColumn + 2, Math.Round((session.Results.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia")) / (double)splitResults.Count, 2).ToString(), false);
-                XlsxUtils.FillCell(worksheet, sumCellRow, currentColumn, $"Total de respostas {sessionName}", true);
+                XlsxUtils.FillCell(worksheet, sumCellRow, currentColumn - 1, $"Total de respostas {sessionName}", true);
                 XlsxUtils.FillCell(worksheet, sumCellRow, sessionColumn, session.Results.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia").ToString(), false);
 
                 var minSumRow = sumCellRow + 2;
                 var maxSumRow = minSumRow + 1;
 
-                XlsxUtils.FillCell(worksheet, minSumRow, currentColumn - 1, $"Limite mínimo do número de respostas", true);
-                XlsxUtils.FillCell(worksheet, minSumRow, sessionColumn, Math.Round(previousTotal * 0.85, 2).ToString(), false);
+                XlsxUtils.FillCell(worksheet, minSumRow, currentColumn - 1, $"Limite mínimo do número de respostas (com base em {previousSessionName})", true);
+                XlsxUtils.FillCell(worksheet, minSumRow, sessionColumn, Math.Round(previousTotal * 0.85, 0).ToString(), false);
 
-                XlsxUtils.FillCell(worksheet, maxSumRow, currentColumn - 1, $"Limite máximo do número de respostas", true);
-                XlsxUtils.FillCell(worksheet, maxSumRow, sessionColumn, Math.Round(previousTotal * 1.15, 2).ToString(), false);
+                XlsxUtils.FillCell(worksheet, maxSumRow, currentColumn - 1, $"Limite máximo do número de respostas (com base em {previousSessionName})", true);
+                XlsxUtils.FillCell(worksheet, maxSumRow, sessionColumn, Math.Round(previousTotal * 1.15, 0).ToString(), false);
 
                 previousTotal = currentTotal;
                 previousResultCount = -1;

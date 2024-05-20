@@ -48,8 +48,8 @@ namespace ExperimentCalculations.Services
 
                 lastRow += aLineSplitResults.Count + 1;
 
-                XlsxUtils.FillCell(worksheet, lastRow, sessionColumn, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante A'", true);
-                XlsxUtils.FillCell(worksheet, lastRow++, sessionColumn + 1, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Nº de respostas durante B'", true);
+                XlsxUtils.FillCell(worksheet, lastRow, sessionColumn, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Média de respostas por segundo durante A'", true);
+                XlsxUtils.FillCell(worksheet, lastRow++, sessionColumn + 1, $"{Enum.GetName(typeof(PhaseEnum), session.Phase)} - Média de respostas por segundo durante B'", true);
 
                 FillCoefficient2Totals(aLineSplitResults, bLineSplitResults, lastRow, sessionColumn, worksheet);
 
@@ -91,6 +91,7 @@ namespace ExperimentCalculations.Services
 
             return splitResults;
         }
+
         private static List<List<Result>> SplitALineResults(IEnumerable<Result> results)
         {
             var sortedResults = results.OrderBy(r => r.Timestamp).ToList();
@@ -215,11 +216,11 @@ namespace ExperimentCalculations.Services
 
                 XlsxUtils.FillCell(worksheet, cellRow, 1, $"P{1 + resultIndex}", true);
 
-                var aTotal = aLineResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
-                var bTotal = bLineSplitResults[resultIndex].Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia");
+                var aTotal = aLineResults.Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia") / (aLineResults.Max(r => r.Timestamp) - aLineResults.Min(r => r.Timestamp));
+                var bTotal = bLineSplitResults[resultIndex].Count(r => r.Event == "Quadrado.Resposta" || r.Event == "Quadrado.Resposta.Latencia") / (bLineSplitResults[resultIndex].Max(r => r.Timestamp) - bLineSplitResults[resultIndex].Min(r => r.Timestamp));
 
-                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, aTotal.ToString(), false);
-                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn + 1, bTotal.ToString(), false);
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn, Math.Round(aTotal, 2).ToString(), false);
+                XlsxUtils.FillCell(worksheet, cellRow, sessionColumn + 1, Math.Round(bTotal, 2).ToString(), false);
             }
 
             return lastRow;
