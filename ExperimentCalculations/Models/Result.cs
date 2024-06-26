@@ -2,7 +2,7 @@
 {
     internal class Result
     {
-        public float Timestamp { get; set; }
+        public double Timestamp { get; set; }
         public int BlockID { get; set; }
         public int AttemptID { get; set; }
         public int Attempt { get; set; }
